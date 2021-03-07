@@ -161,7 +161,7 @@
 -type(subscribe_ret() ::
       {ok, properties(), [reason_code()]} | {error, term()}).
 
--type(conn_mod() :: emqtt_sock | emqtt_ws).
+-type(conn_mod() :: emqtt_sock | emqtt_ws | emqtt_quic).
 
 -type(client() :: pid() | atom()).
 
