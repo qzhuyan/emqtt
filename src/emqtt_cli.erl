@@ -87,14 +87,13 @@
         ]).
 
 main(["sub" | Argv]) ->
-    {ok, {Opts, _Args}} = getopt:parse(?SUB_OPTS, string:join(Argv, " ")),
+    {ok, {Opts, _Args}} = getopt:parse(?SUB_OPTS, Argv),
     ok = maybe_help(sub, Opts),
     ok = check_required_args(sub, [topic], Opts),
     main(sub, Opts);
 
 main(["pub" | Argv]) ->
-    {ok, {Opts, _Args}} = getopt:parse(?PUB_OPTS, string:join(Argv, " ")),
-    io:format("Opts are ~p~n",[{Opts, string:join(Argv, " ")}]),
+    {ok, {Opts, _Args}} = getopt:parse(?PUB_OPTS, Argv),
     ok = maybe_help(pub, Opts),
     ok = check_required_args(pub, [topic, payload], Opts),
     main(pub, Opts);
