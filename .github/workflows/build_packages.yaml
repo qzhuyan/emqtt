@@ -59,6 +59,15 @@ jobs:
             .github/workflows/script/build.sh
             pkg=emqtt-macos-$(git describe --tags --always).zip
             openssl dgst -sha256 _packages/$pkg | awk '{print $2}' > _packages/$pkg.sha256
+
+        - name: Archive failed build for invetigation
+          uses: actions/upload-artifact@v2
+          if: failure()
+          with:
+            name: linux-ct-logs
+            path: _build/
+            retention-days: 1
+
         - uses: actions/upload-artifact@v1
           with:
             name: packages-mac
