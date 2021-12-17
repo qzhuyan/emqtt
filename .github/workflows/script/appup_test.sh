@@ -78,7 +78,7 @@ main() {
     current_vsn=$(git describe --tags --always)
     echo "Using temp dir: $tmpdir"
     prepare_releases "$tmpdir" "$current_vsn"
-    test_relup "$tmpdir"
+    test_relup "$tmpdir" "$current_vsn"
 }
 
 
