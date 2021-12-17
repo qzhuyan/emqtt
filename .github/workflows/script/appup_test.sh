@@ -18,7 +18,9 @@ build_legacy() {
     do
         echo "building rel tar for $vsn"
         git checkout "$vsn"
-        build_and_save_tar "$dest_dir";
+        rebar3 as emqtt tar
+        mv _build/emqtt/rel/emqtt/emqtt-*.tar.gz "${dest_dir}"
+        #build_and_save_tar "$dest_dir";
     done
 }
 
