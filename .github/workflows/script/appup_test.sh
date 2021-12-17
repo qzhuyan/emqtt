@@ -3,11 +3,11 @@ set -euo pipefail
 
 #global
 app=emqtt
-supported_rel_vsns="1.4.4"
+supported_rel_vsns="1.4.5"
 
 build_and_save_tar() {
     dest_dir="$1"
-    make clean
+    #make clean
     rebar3 as emqtt_relup_test tar
     mv _build/emqtt_relup_test/rel/emqtt/emqtt-*.tar.gz "${dest_dir}"
 }
@@ -80,8 +80,11 @@ main() {
 }
 
 
-cmd=${1:-main}
+cmd=${1:-"main"}
 
-shift;
-
-$cmd $@
+if [[ "main" == $cmd ]]; then
+    main
+else
+    shift 1
+    $cmd $@
+fi
