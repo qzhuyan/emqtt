@@ -45,3 +45,6 @@ dialyzer:
 
 escript: $(REBAR) compile
 	$(REBAR) as escript escriptize
+
+relup-test:
+	.github/workflows/script/appup_test.sh
