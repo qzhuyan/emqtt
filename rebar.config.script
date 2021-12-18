@@ -36,10 +36,15 @@ NewRelx =
     end,
 
 Profiles = Keyfind(profiles, CONFIG),
-Profiles1 = lists:keystore(emqtt, 1, Profiles, {emqtt, NewRelx(emqtt, Profiles)}),
-Profiles2 = lists:keystore(emqtt_pkg, 1, Profiles1, {emqtt_pkg, NewRelx(emqtt_pkg, Profiles1)}),
-Profiles3 = lists:keystore(emqtt_relup_test, 1, Profiles1, {emqtt_relup_test, NewRelx(emqtt_relup_test, Profiles1)}),
-NewConfig = lists:keystore(profiles, 1, CONFIG, {profiles, Profiles3}),
+%% Profiles1 = lists:keystore(emqtt, 1, Profiles, {emqtt, NewRelx(emqtt, Profiles)}),
+%% Profiles2 = lists:keystore(emqtt_pkg, 1, Profiles1, {emqtt_pkg, NewRelx(emqtt_pkg, Profiles1)}),
+%% Profiles3 = lists:keystore(emqtt_relup_test, 1, Profiles1, {emqtt_relup_test, NewRelx(emqtt_relup_test, Profiles1)}),
+
+NewProfiles = lists:foldl(fun(Key, Acc) ->
+                                  lists:keystore(Key, 1, Acc, {Key, NewRelx(Key, Acc)})
+                          end, Profiles, [emqtt, emqtt_pkg, emqtt_relup_test]),
+
+NewConfig = lists:keystore(profiles, 1, CONFIG, {profiles, NewProfiles}),
 
 Quicer = {quicer, {git, "https://github.com/emqx/quic.git", {tag, "0.0.9"}}},
 ExtraDeps = fun(C) ->
