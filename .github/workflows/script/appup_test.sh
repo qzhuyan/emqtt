@@ -9,8 +9,7 @@ supported_rel_vsns="1.4.6"
 build_and_save_tar() {
     dest_dir="$1"
     #make clean
-    rebar3 as emqtt_relup_test tar
-    mv _build/emqtt_relup_test/rel/emqtt/emqtt-*.tar.gz "${dest_dir}"
+    rebar3 as emqtt_relup_test do relup_helper gen_appups,tar
 }
 
 build_legacy() {
@@ -26,7 +25,11 @@ build_legacy() {
         # rebar3 as emqtt tar
         # popd
         #mv "${vsn_dir}/_build/emqtt/rel/emqtt/emqtt-${vsn}.tar.gz" ${dest_dir}
+        pushd ./
+        cd ${vsn_dir}
         build_and_save_tar "$dest_dir";
+        popd
+        mv ${vsn_dir}/_build/emqtt_relup_test/rel/emqtt/emqtt-*.tar.gz "${dest_dir}"
     done
 }
 
@@ -36,7 +39,7 @@ untar_all_pkgs() {
     mkdir -p "$appdir"
     for f in ${dir}/*.tar.gz;
     do
-        tar zxvf "$f" -C "$appdir";
+        tar zxf "$f" -C "$appdir";
     done
 }
 
@@ -61,7 +64,8 @@ test_relup() {
     do
         echo "unpack"
         appdir="${tar_dir}/${vsn}/"
-        mkdir -p "${appdir}"
+        rm --preserve-root -rf "${appdir}/"
+        mkdir -p ${appdir}
         tar zxvf "$tar_dir/$app-$vsn.tar.gz" -C "$appdir"
         echo "starting $vsn"
         export appscript="${appdir}/bin/emqtt"
@@ -85,6 +89,7 @@ make_relup() {
     local appdir="$1/$app"
 
     untar_all_pkgs "$tmpdir"
+    cp _build/emqtt_relup_test/lib/emqtt/ebin/emqtt.appup "${appdir}/lib/emqtt-${current_vsn}/ebin/"
     pushd ./
 
     cd "${appdir}"
