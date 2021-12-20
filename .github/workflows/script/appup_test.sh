@@ -21,12 +21,12 @@ build_legacy() {
         vsn_dir="$dest_dir/$app-$vsn"
         # FIXME, this is temp repo for test
         git clone https://github.com/qzhuyan/emqtt.git -b "$vsn" --recursive --depth 1 "$vsn_dir"
-        pushd ./
-        cd "$vsn_dir"
-        rebar3 as emqtt tar
-        popd
-        mv "${vsn_dir}/_build/emqtt/rel/emqtt/emqtt-${vsn}.tar.gz" ${dest_dir}
-        #build_and_save_tar "$dest_dir";
+        # pushd ./
+        # cd "$vsn_dir"
+        # rebar3 as emqtt tar
+        # popd
+        #mv "${vsn_dir}/_build/emqtt/rel/emqtt/emqtt-${vsn}.tar.gz" ${dest_dir}
+        build_and_save_tar "$dest_dir";
     done
 }
 
@@ -54,15 +54,14 @@ test_relup_cleanup() {
 test_relup() {
     local tar_dir="$1"
     local target_vsn="$2"
-    local appdir="${tar_dir}/${target_vsn}/emqtt"
-    mkdir -p "$appdir"
-    rm --preserve-root -rf "${appdir}/*"
 
-    trap test_relup_cleanup EXIT
+    #trap test_relup_cleanup EXIT
 
     for vsn in ${supported_rel_vsns};
     do
         echo "unpack"
+        appdir="${tar_dir}/${vsn}/"
+        mkdir -p "${appdir}"
         tar zxvf "$tar_dir/$app-$vsn.tar.gz" -C "$appdir"
         echo "starting $vsn"
         export appscript="${appdir}/bin/emqtt"
