@@ -4,7 +4,7 @@ BASEDIR=$(dirname $(realpath "$0"))
 
 #global
 app=emqtt
-supported_rel_vsns="1.4.5"
+supported_rel_vsns="1.4.6"
 
 build_and_save_tar() {
     dest_dir="$1"
@@ -19,7 +19,8 @@ build_legacy() {
     do
         echo "building rel tar for $vsn"
         vsn_dir="$dest_dir/$app-$vsn"
-        git clone https://github.com/emqx/emqtt.git -b "$vsn" --recursive --depth 1 "$vsn_dir"
+        # FIXME, this is temp repo for test
+        git clone https://github.com/qzhuyan/emqtt.git -b "$vsn" --recursive --depth 1 "$vsn_dir"
         pushd ./
         cd "$vsn_dir"
         rebar3 as emqtt tar
@@ -81,17 +82,20 @@ test_relup() {
 
 make_relup() {
     local tmpdir="$1"
+    local current_vsn="$2"
     local appdir="$1/$app"
+
+    untar_all_pkgs "$tmpdir"
     pushd ./
 
-    cd "$appdir"
-    for vsn in $supported_rel_vsns;
+    cd "${appdir}"
+    for vsn in $supported_rel_vsns $current_vsn;
     do
-        [ -f "$vsn.rel" ] || ln -s "releases/$vsn/emqtt.rel" "$vsn.rel"
+        [ -e "${vsn}.rel" ] || ln -s "releases/$vsn/emqtt.rel" "$vsn.rel"
     done
-    ${BASEDIR}/generate_relup.escript "1.4.7" "$supported_rel_vsns" $PWD "$appdir/lib"
-    popd
 
+    ${BASEDIR}/generate_relup.escript "1.4.7" "$supported_rel_vsns" "$PWD" "lib/" "$PWD/releases/${current_vsn}"
+    popd
 }
 
 main() {
@@ -100,7 +104,7 @@ main() {
     echo "Using temp dir: $tmpdir"
     prepare_releases "$tmpdir" "$current_vsn"
     untar_all_pkgs "$tmpdir"
-    make_relup "$tmpdir"
+    make_relup "$tmpdir" "$current_vsn"
     test_relup "$tmpdir" "$current_vsn"
 }
 
