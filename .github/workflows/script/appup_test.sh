@@ -6,7 +6,6 @@ BASEDIR=$(dirname $(realpath "$0"))
 app=emqtt
 supported_rel_vsns="1.4.6"
 
-
 die()
 {
     echo "$1"
@@ -34,11 +33,6 @@ build_legacy() {
         vsn_dir="$dest_dir/$app-$vsn"
         # FIXME, this is temp repo for test
         git clone https://github.com/qzhuyan/emqtt.git -b "$vsn" --recursive --depth 1 "$vsn_dir"
-        # pushd ./
-        # cd "$vsn_dir"
-        # rebar3 as emqtt tar
-        # popd
-        #mv "${vsn_dir}/_build/emqtt/rel/emqtt/emqtt-${vsn}.tar.gz" ${dest_dir}
         pushd ./
         cd ${vsn_dir}
         build_and_save_tar "$dest_dir";
@@ -111,9 +105,12 @@ test_relup() {
         ##
         ## Trigger DOWNGRADE and check results
         ##
-
         echo "Start downgrade test"
         $appscript downgrade "$vsn"
+        $appscript eval 'true = is_process_alive(whereis(test_client1)).'
+        $appscript eval 'sys:get_status(test_client1).'
+        $appscript eval 'true = is_process_alive(whereis(test_client1)).'
+
         echo "Downgrade test done and success"
 
     done;
@@ -143,7 +140,7 @@ make_relup() {
 }
 
 main() {
-    tmpdir=$(mktemp -d -p .  --suffix '.relup_test')
+    tmpdir=$(realpath $(mktemp -d -p . --suffix '.relup_test'))
     current_vsn=$(git describe --tags --always)
     echo "Using temp dir: $tmpdir"
     prepare_releases "$tmpdir" "$current_vsn"
