@@ -129,7 +129,7 @@ make_relup() {
     local appdir="$1/$app"
 
     untar_all_pkgs "$tmpdir"
-    cp _build/emqtt_relup_test/lib/emqtt/ebin/emqtt.appup "${appdir}/lib/emqtt-$(current_app_lib_vsn)/ebin/"
+    #cp _build/emqtt_relup_test/lib/emqtt/ebin/emqtt.appup "${appdir}/lib/emqtt-${current_vsn}/ebin/"
     pushd ./
 
     cd "${appdir}"
@@ -147,22 +147,18 @@ make_relup() {
 }
 
 current_vsn() {
-    #app=$(rebar3 tree | grep emqtt | awk '{print $2}')
-    # !!! note the '─' is not '-', it is <<226,148,128>>
-    # https://github.com/erlang/rebar3/blob/master/src/rebar_prv_deps_tree.erl#L72
-    #app=${app/"emqtt─"/}
-    #echo $app
     git describe --tags --always
 }
 
-current_app_lib_vsn() {
-    app=$(rebar3 tree | grep emqtt | awk '{print $2}')
-    # !!! note the '─' is not '-', it is <<226,148,128>>
-    # https://github.com/erlang/rebar3/blob/master/src/rebar_prv_deps_tree.erl#L72
-    app=${app/"emqtt─"/}
-    echo $app
+### Just in case you need it
+# current_app_lib_vsn() {
+#     app=$(rebar3 tree | grep emqtt | awk '{print $2}')
+#     # !!! note the '─' is not '-', it is <<226,148,128>>
+#     # https://github.com/erlang/rebar3/blob/master/src/rebar_prv_deps_tree.erl#L72
+#     app=${app/"emqtt─"/}
+#     echo $app
 
-}
+# }
 
 main() {
     tmpdir=$(realpath $(mktemp -d -p . --suffix '.relup_test'))
