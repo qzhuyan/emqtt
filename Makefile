@@ -45,3 +45,6 @@ dialyzer:
 
 escript: $(REBAR) compile
 	$(REBAR) as escript escriptize
+
+relup-test: ${REBAR}
+	bash -x bin/appup_test.sh

@@ -1,11 +1,11 @@
 %% -*-: erlang -*-
-{"1.4.5",
-  [ {"1.4.4", [
+{VSN,
+  [ {<<"1.4.*">>, [
      {load_module, emqtt, brutal_purge, soft_purge, []}
     ]},
    {<<"1\\.4\\.[0-3]+">>, []} %% No appup maintained for these versions
   ],
-  [ {"1.4.4", [
+  [ {<<"1.4.*">>, [
      {load_module, emqtt, brutal_purge, soft_purge, []}
     ]},
    {<<"1\\.4\\.[0-3]+">>, []} %% No appup maintained for these versions
