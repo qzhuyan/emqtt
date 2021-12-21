@@ -95,6 +95,10 @@ test_relup() {
         #$appscript unpack "$target_vsn"
         $appscript versions
 
+        $appscript eval 'spawn_link(fun() -> process_flag(trap_exit, false), {ok, Pid}=emqtt:start_link(), true=register(test_client1, Pid), receive stop -> ok end end).'
+        $appscript eval 'true = is_process_alive(whereis(test_client1)).'
+        $appscript eval 'sys:get_status(test_client1).'
+
         ##
         ## Trigger UPGRADE and check results
         ##
@@ -102,8 +106,10 @@ test_relup() {
         $appscript upgrade --no-permanent "$target_vsn"
         $appscript ping
         $appscript versions
+        $appscript eval 'true = is_process_alive(whereis(test_client1)).'
+        $appscript eval 'sys:get_status(test_client1).'
+        $appscript eval 'true = is_process_alive(whereis(test_client1)).'
         echo "Upgrade test done and success"
-
 
         ##
         ## Trigger DOWNGRADE and check results
