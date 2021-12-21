@@ -2,7 +2,7 @@
 set -euo pipefail
 BASEDIR=$(dirname $(realpath "$0"))
 
-#global
+# GLOBAL
 app=emqtt
 supported_rel_vsns="1.4.6"
 
@@ -15,8 +15,13 @@ die()
 
 build_and_save_tar() {
     dest_dir="$1"
-    #make clean
-    rebar3 as emqtt_relup_test do relup_helper gen_appups,tar
+
+    if rebar3 plugins list |grep relup_helper; then
+        # for old vsn that do not have relup_helper
+        rebar3 as emqtt_relup_test do relup_helper gen_appups,tar;
+    else
+        rebar3 as emqtt_relup_test do tar
+    fi
 }
 
 build_legacy() {
