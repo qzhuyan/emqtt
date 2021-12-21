@@ -171,6 +171,8 @@
 
 -opaque(mqtt_msg() :: #mqtt_msg{}).
 
+
+%% append new record for upgrade
 -record(state, {
           name            :: atom(),
           owner           :: pid(),
@@ -209,8 +211,8 @@
           session_present :: boolean(),
           last_packet_id  :: packet_id(),
           low_mem         :: boolean(),
-          reconnect       :: boolean(),
-          parse_state     :: emqtt_frame:parse_state()
+          parse_state     :: emqtt_frame:parse_state(),
+          reconnect       :: boolean()
          }).
 
 -record(call, {id, from, req, ts}).
@@ -1116,8 +1118,17 @@ terminate(Reason, _StateName, State = #state{conn_mod = ConnMod, socket = Socket
         _ -> ConnMod:close(Socket)
     end.
 
-code_change(_Vsn, State, Data, _Extra) ->
-    {ok, State, Data}.
+code_change(OldVsn, OldState, OldData, _Extra) ->
+    io:format("code change is called ~p~n ", [{OldVsn, OldState, OldData, _Extra}]),
+    NewData = list_to_tuple(tuple_to_list(OldData) ++ [false]),
+    {ok, OldState, NewData};
+
+%% Downgrade
+code_change({down, OldVsn}, OldState, OldData, _Extra) ->
+    Tmp = tuple_to_list(OldData),
+    NewData = list_to_tuple(lists:sublist(length(Tmp) -1, Tmp)),
+    #state{} = NewData,
+    {ok, OldState, NewData}.
 
 %%--------------------------------------------------------------------
 %% Internal functions
