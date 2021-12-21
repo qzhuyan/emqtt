@@ -57,15 +57,10 @@ prepare_releases() {
     untar_all_pkgs "$dest_dir"
 }
 
-test_relup_cleanup() {
-    $appscript stop
-}
-
 test_relup() {
     local tar_dir="$1"
     local target_vsn="$2"
     local relup="$3"
-    #trap test_relup_cleanup EXIT
 
     if [ ! -f "$relup" ];
     then
@@ -79,20 +74,44 @@ test_relup() {
         rm --preserve-root -rf "${appdir}/"
         mkdir -p ${appdir}
         tar zxf "$tar_dir/$app-$vsn.tar.gz" -C "$appdir"
+
+        ##
+        ## Start Old Version of EMQTT
+        ##
         echo "starting $vsn"
-        export appscript="${appdir}/bin/emqtt"
+        appscript="${appdir}/bin/emqtt"
+        trap "$appscript stop" EXIT
         $appscript daemon
         $appscript ping
         $appscript versions
+
+        ##
+        ## Deploy NEW Target Version
+        ##
         echo "deploy $target_vsn"
         #mkdir -p "$appdir/releases/$target_vsn/"
         #cp "$relup" "$appdir/releases/$target_vsn/"
         cp "$tar_dir/$app-$target_vsn.tar.gz" "$appdir/releases/"
         #$appscript unpack "$target_vsn"
         $appscript versions
-        $appscript upgrade --no-permenant "$target_vsn"
+
+        ##
+        ## Trigger UPGRADE and check results
+        ##
+        echo "Upgrade test"
+        $appscript upgrade --no-permanent "$target_vsn"
         $appscript ping
         $appscript versions
+        echo "Upgrade test done and success"
+
+
+        ##
+        ## Trigger DOWNGRADE and check results
+        ##
+
+        echo "Start downgrade test"
+        $appscript downgrade "$vsn"
+        echo "Downgrade test done and success"
 
     done;
 }
