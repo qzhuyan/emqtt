@@ -2,6 +2,13 @@
 set -euo pipefail
 BASEDIR=$(dirname $(realpath "$0"))
 
+## @DOC
+## The script is used to test the appup.src file with following steps,
+## 1) It builds all release tar files of *current* vsn and old vsns that they are defined in ${supported_rel_vsns}
+## 2) It untar all the tar files to one tmp dir then build the *relup* file from there. see make_relup()
+## 3) It then append the relup file to the tar file of current release, see make_relup()
+## 4) It then test the old vsn upgrade and downgrade, see test_relup()
+
 # GLOBAL
 app=emqtt
 supported_rel_vsns="1.4.6"
@@ -122,7 +129,7 @@ make_relup() {
     local appdir="$1/$app"
 
     untar_all_pkgs "$tmpdir"
-    cp _build/emqtt_relup_test/lib/emqtt/ebin/emqtt.appup "${appdir}/lib/emqtt-${current_vsn}/ebin/"
+    cp _build/emqtt_relup_test/lib/emqtt/ebin/emqtt.appup "${appdir}/lib/emqtt-$(current_app_lib_vsn)/ebin/"
     pushd ./
 
     cd "${appdir}"
@@ -131,7 +138,7 @@ make_relup() {
         [ -e "${vsn}.rel" ] || ln -s "releases/$vsn/emqtt.rel" "$vsn.rel"
     done
 
-    ${BASEDIR}/generate_relup.escript "1.4.7" "$supported_rel_vsns" "$PWD" "lib/" "$PWD/releases/${current_vsn}"
+    ${BASEDIR}/generate_relup.escript "$current_vsn" "${supported_rel_vsns/ /,}" "$PWD" "lib/" "$PWD/releases/${current_vsn}"
     popd
 
     gzip -d "${tmpdir}/emqtt-${current_vsn}.tar.gz"
@@ -139,9 +146,27 @@ make_relup() {
     gzip "${tmpdir}/emqtt-${current_vsn}.tar"
 }
 
+current_vsn() {
+    #app=$(rebar3 tree | grep emqtt | awk '{print $2}')
+    # !!! note the '─' is not '-', it is <<226,148,128>>
+    # https://github.com/erlang/rebar3/blob/master/src/rebar_prv_deps_tree.erl#L72
+    #app=${app/"emqtt─"/}
+    #echo $app
+    git describe --tags --always
+}
+
+current_app_lib_vsn() {
+    app=$(rebar3 tree | grep emqtt | awk '{print $2}')
+    # !!! note the '─' is not '-', it is <<226,148,128>>
+    # https://github.com/erlang/rebar3/blob/master/src/rebar_prv_deps_tree.erl#L72
+    app=${app/"emqtt─"/}
+    echo $app
+
+}
+
 main() {
     tmpdir=$(realpath $(mktemp -d -p . --suffix '.relup_test'))
-    current_vsn=$(git describe --tags --always)
+    current_vsn=$(current_vsn)
     echo "Using temp dir: $tmpdir"
     prepare_releases "$tmpdir" "$current_vsn"
     untar_all_pkgs "$tmpdir"
