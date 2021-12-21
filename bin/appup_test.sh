@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 BASEDIR=$(dirname $(realpath "$0"))
+REBAR3=./rebar3
 
 ## @DOC
 ## The script is used to test the appup.src file with following steps,
@@ -21,12 +22,12 @@ die()
 
 build_and_save_tar() {
     dest_dir="$1"
-
-    if rebar3 plugins list |grep relup_helper; then
+    make "$PWD/rebar3"
+    if ${REBAR3} plugins list |grep relup_helper; then
         # for old vsn that do not have relup_helper
-        rebar3 as emqtt_relup_test do relup_helper gen_appups,tar;
+        ${REBAR3} as emqtt_relup_test do relup_helper gen_appups,tar;
     else
-        rebar3 as emqtt_relup_test do tar
+        ${REBAR3} as emqtt_relup_test do tar
     fi
 
     mv _build/emqtt_relup_test/rel/emqtt/emqtt-*.tar.gz "${dest_dir}"
@@ -152,7 +153,7 @@ current_vsn() {
 
 ### Just in case you need it
 # current_app_lib_vsn() {
-#     app=$(rebar3 tree | grep emqtt | awk '{print $2}')
+#     app=$(./rebar3 tree | grep emqtt | awk '{print $2}')
 #     # !!! note the '─' is not '-', it is <<226,148,128>>
 #     # https://github.com/erlang/rebar3/blob/master/src/rebar_prv_deps_tree.erl#L72
 #     app=${app/"emqtt─"/}
