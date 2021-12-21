@@ -22,6 +22,8 @@ build_and_save_tar() {
     else
         rebar3 as emqtt_relup_test do tar
     fi
+
+    mv _build/emqtt_relup_test/rel/emqtt/emqtt-*.tar.gz "${dest_dir}"
 }
 
 build_legacy() {
@@ -41,7 +43,6 @@ build_legacy() {
         cd ${vsn_dir}
         build_and_save_tar "$dest_dir";
         popd
-        mv ${vsn_dir}/_build/emqtt_relup_test/rel/emqtt/emqtt-*.tar.gz "${dest_dir}"
     done
 }
 
@@ -65,12 +66,6 @@ prepare_releases() {
 test_relup() {
     local tar_dir="$1"
     local target_vsn="$2"
-    local relup="$3"
-
-    if [ ! -f "$relup" ];
-    then
-        die "relup not found"
-    fi
 
     for vsn in ${supported_rel_vsns};
     do
@@ -94,10 +89,7 @@ test_relup() {
         ## Deploy NEW Target Version
         ##
         echo "deploy $target_vsn"
-        #mkdir -p "$appdir/releases/$target_vsn/"
-        #cp "$relup" "$appdir/releases/$target_vsn/"
         cp "$tar_dir/$app-$target_vsn.tar.gz" "$appdir/releases/"
-        #$appscript unpack "$target_vsn"
         $appscript versions
 
         $appscript eval 'spawn_link(fun() -> process_flag(trap_exit, false), {ok, Pid}=emqtt:start_link(), true=register(test_client1, Pid), receive stop -> ok end end).'
@@ -147,7 +139,7 @@ make_relup() {
 
     gzip -d "${tmpdir}/emqtt-${current_vsn}.tar.gz"
     tar rvf "${tmpdir}/emqtt-${current_vsn}.tar"  -C "$appdir" "releases/${current_vsn}/relup"
-    gzip "${tmpdir}/emqtt-${current_vsn}.tar.gz"
+    gzip "${tmpdir}/emqtt-${current_vsn}.tar"
 }
 
 main() {
@@ -157,7 +149,7 @@ main() {
     prepare_releases "$tmpdir" "$current_vsn"
     untar_all_pkgs "$tmpdir"
     make_relup "$tmpdir" "$current_vsn"
-    test_relup "$tmpdir" "$current_vsn" "$tmpdir/$app/releases/${current_vsn}/relup"
+    test_relup "$tmpdir" "$current_vsn"
 }
 
 
