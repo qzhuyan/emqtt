@@ -6,6 +6,13 @@ BASEDIR=$(dirname $(realpath "$0"))
 app=emqtt
 supported_rel_vsns="1.4.6"
 
+
+die()
+{
+    echo "$1"
+    exit 1;
+}
+
 build_and_save_tar() {
     dest_dir="$1"
     #make clean
@@ -57,8 +64,13 @@ test_relup_cleanup() {
 test_relup() {
     local tar_dir="$1"
     local target_vsn="$2"
-
+    local relup="$3"
     #trap test_relup_cleanup EXIT
+
+    if [ ! -f "$relup" ];
+    then
+        die "relup not found"
+    fi
 
     for vsn in ${supported_rel_vsns};
     do
@@ -66,17 +78,19 @@ test_relup() {
         appdir="${tar_dir}/${vsn}/"
         rm --preserve-root -rf "${appdir}/"
         mkdir -p ${appdir}
-        tar zxvf "$tar_dir/$app-$vsn.tar.gz" -C "$appdir"
+        tar zxf "$tar_dir/$app-$vsn.tar.gz" -C "$appdir"
         echo "starting $vsn"
         export appscript="${appdir}/bin/emqtt"
         $appscript daemon
         $appscript ping
         $appscript versions
         echo "deploy $target_vsn"
+        #mkdir -p "$appdir/releases/$target_vsn/"
+        #cp "$relup" "$appdir/releases/$target_vsn/"
         cp "$tar_dir/$app-$target_vsn.tar.gz" "$appdir/releases/"
-        $appscript install "$target_vsn"
+        #$appscript unpack "$target_vsn"
         $appscript versions
-        $appscript upgrade --no-permenant "emqx-$target_vsn"
+        $appscript upgrade --no-permenant "$target_vsn"
         $appscript ping
         $appscript versions
 
@@ -100,6 +114,10 @@ make_relup() {
 
     ${BASEDIR}/generate_relup.escript "1.4.7" "$supported_rel_vsns" "$PWD" "lib/" "$PWD/releases/${current_vsn}"
     popd
+
+    gzip -d "${tmpdir}/emqtt-${current_vsn}.tar.gz"
+    tar rvf "${tmpdir}/emqtt-${current_vsn}.tar"  -C "$appdir" "releases/${current_vsn}/relup"
+    gzip "${tmpdir}/emqtt-${current_vsn}.tar.gz"
 }
 
 main() {
@@ -109,7 +127,7 @@ main() {
     prepare_releases "$tmpdir" "$current_vsn"
     untar_all_pkgs "$tmpdir"
     make_relup "$tmpdir" "$current_vsn"
-    test_relup "$tmpdir" "$current_vsn"
+    test_relup "$tmpdir" "$current_vsn" "$tmpdir/$app/releases/${current_vsn}/relup"
 }
 
 
