@@ -84,6 +84,7 @@
         , handle_event/4
         , terminate/3
         , code_change/4
+        , format_status/2
         ]).
 
 
@@ -1011,6 +1012,21 @@ inflight_full(EventType, EventContent, Data) ->
     %% delegate all other events to connected state.
     connected(EventType, EventContent, Data).
 
+
+%% Cheat release manager that I am the target process for code change.
+%% example
+%% {ok, Pid}=emqtt:start_link().
+%% ets:insert(ac_tab,{{application_master, emqtt}, Pid}).
+%% release_handler_1:get_supervised_procs().
+
+%% Cheat release handler
+handle_event(info, {get_child, Ref, From}, _StateName, _State) ->
+    From ! {Ref, {self(), ?MODULE}},
+    keep_state_and_data;
+handle_event({call, From}, which_children, _StateName, _State) ->
+    {keep_state_and_data, {reply, From, []}};
+%% Cheat ends here
+
 handle_event({call, From}, stop, _StateName, _State) ->
     {stop_and_reply, normal, [{reply, From, ok}]};
 
@@ -1129,6 +1145,11 @@ code_change(OldVsn, OldState, OldData, _Extra) ->
     NewData = list_to_tuple(tuple_to_list(OldData) ++ [false]),
     {ok, OldState, NewData}.
 
+
+
+format_status(_, State) ->
+    [{data, [{"State", State}]},
+     {supervisor, [{"Callback", ?MODULE}]}].
 
 %%--------------------------------------------------------------------
 %% Internal functions
