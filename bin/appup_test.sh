@@ -39,7 +39,7 @@ build_legacy() {
         echo "building rel tar for $vsn"
         vsn_dir="$dest_dir/$app-$vsn"
         # FIXME, this is temp repo for test
-        git clone https://github.com/qzhuyan/emqtt.git -b "$vsn" --recursive --depth 1 "$vsn_dir"
+        git clone https://github.com/emqx/emqtt.git -b "$vsn" --recursive --depth 1 "$vsn_dir"
         pushd ./
         cd ${vsn_dir}
         build_and_save_tar "$dest_dir";
@@ -165,16 +165,6 @@ make_relup() {
 current_vsn() {
     git describe --tags --always
 }
-
-### Just in case you need it
-# current_app_lib_vsn() {
-#     app=$(rebar3 tree | grep emqtt | awk '{print $2}')
-#     # !!! note the '─' is not '-', it is <<226,148,128>>
-#     # https://github.com/erlang/rebar3/blob/master/src/rebar_prv_deps_tree.erl#L72
-#     app=${app/"emqtt─"/}
-#     echo $app
-
-# }
 
 main() {
     tmpdir=$(realpath $(mktemp -d -p . --suffix '.relup_test'))
