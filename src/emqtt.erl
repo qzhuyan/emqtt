@@ -1118,17 +1118,17 @@ terminate(Reason, _StateName, State = #state{conn_mod = ConnMod, socket = Socket
         _ -> ConnMod:close(Socket)
     end.
 
-code_change(OldVsn, OldState, OldData, _Extra) ->
-    io:format("code change is called ~p~n ", [{OldVsn, OldState, OldData, _Extra}]),
-    NewData = list_to_tuple(tuple_to_list(OldData) ++ [false]),
-    {ok, OldState, NewData};
-
 %% Downgrade
-code_change({down, OldVsn}, OldState, OldData, _Extra) ->
+code_change({down, _OldVsn}, OldState, OldData, _Extra) ->
     Tmp = tuple_to_list(OldData),
     NewData = list_to_tuple(lists:sublist(length(Tmp) -1, Tmp)),
     #state{} = NewData,
+    {ok, OldState, NewData};
+
+code_change(OldVsn, OldState, OldData, _Extra) ->
+    NewData = list_to_tuple(tuple_to_list(OldData) ++ [false]),
     {ok, OldState, NewData}.
+
 
 %%--------------------------------------------------------------------
 %% Internal functions
