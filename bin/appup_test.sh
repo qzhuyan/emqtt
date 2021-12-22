@@ -104,7 +104,7 @@ test_relup() {
         cp "$tar_dir/$app-$target_vsn.tar.gz" "$appdir/releases/"
         $appscript versions
 
-        $appscript eval 'spawn_link(fun() -> process_flag(trap_exit, false), {ok, Pid}=emqtt:start_link(), true=register(test_client1, Pid), receive stop -> ok end end).'
+        $appscript eval 'spawn_link(fun() -> process_flag(trap_exit, false), {ok, Pid}=emqtt:start_link(), ets:insert(ac_tab,{{application_master, emqtt}, Pid}), true=register(test_client1, Pid), receive stop -> ok end end).'
         erl_eval "$appscript" 'true = is_process_alive(whereis(test_client1)).' 'true'
 
         ##
@@ -117,28 +117,23 @@ test_relup() {
         #$appscript eval 'false = erlang:check_process_code(whereis(test_client1),emqtt).'
         #$appscript eval 'ok = gen_statem:stop(test_client1).'
         erl_eval "$appscript" 'false = erlang:check_process_code(whereis(test_client1),emqtt).' 'false'
-        erl_eval "$appscript" 'sys:suspend(test_client1).' 'ok'
-        erl_eval "$appscript" 'sys:change_code(test_client1,emqtt,"1.2.6",[]).' 'ok'
-        erl_eval "$appscript" 'sys:resume(test_client1).' 'ok'
+        # erl_eval "$appscript" 'sys:suspend(test_client1).' 'ok'
+        # erl_eval "$appscript" 'sys:change_code(test_client1,emqtt,"1.2.6",[]).' 'ok'
+        # erl_eval "$appscript" 'sys:resume(test_client1).' 'ok'
         erl_eval "$appscript" 'ok = gen_statem:stop(test_client1).' 'ok'
         echo "Upgrade test done and success"
 
 
-        $appscript eval 'spawn_link(fun() -> process_flag(trap_exit, false), {ok, Pid}=emqtt:start_link(), true=register(test_client1, Pid), receive stop -> ok end end).'
+        $appscript eval 'spawn_link(fun() -> process_flag(trap_exit, false), {ok, Pid}=emqtt:start_link(), ets:insert(ac_tab,{{application_master, emqtt},Pid}), true=register(test_client1, Pid), receive stop -> ok end end).'
         erl_eval "$appscript" 'true = is_process_alive(whereis(test_client1)).' 'true'
 
         ##
         ## Trigger DOWNGRADE and check results
-        ##
+        ## note, downgrade isn't supported yet
         echo "Start downgrade test"
-        erl_eval "$appscript" 'sys:suspend(test_client1).' 'ok'
-        erl_eval "$appscript" 'sys:change_code(test_client1,emqtt,{old,"1.2.6"},[]).' 'ok'
-        erl_eval "$appscript" 'sys:resume(test_client1).' 'ok'
-        erl_eval "$appscript" 'ok = gen_statem:stop(test_client1).' 'ok'
         $appscript downgrade "$vsn"
         erl_eval "$appscript" 'false = erlang:check_process_code(whereis(test_client1),emqtt).' 'false'
-
-        erl_eval "$appscript"  eval 'true = is_process_alive(whereis(test_client1)).' 'true'
+        erl_eval "$appscript" 'ok = gen_statem:stop(test_client1).' 'ok'
         echo "Downgrade test done and success"
 
     done;

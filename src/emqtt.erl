@@ -1137,15 +1137,12 @@ terminate(Reason, _StateName, State = #state{conn_mod = ConnMod, socket = Socket
 %% Downgrade
 code_change({down, _OldVsn}, OldState, OldData, _Extra) ->
     Tmp = tuple_to_list(OldData),
-    NewData = list_to_tuple(lists:sublist(length(Tmp) -1, Tmp)),
-    #state{} = NewData,
+    NewData = list_to_tuple(lists:sublist(Tmp, length(Tmp) -1)),
     {ok, OldState, NewData};
 
-code_change(OldVsn, OldState, OldData, _Extra) ->
+code_change(_OldVsn, OldState, OldData, _Extra) ->
     NewData = list_to_tuple(tuple_to_list(OldData) ++ [false]),
     {ok, OldState, NewData}.
-
-
 
 format_status(_, State) ->
     [{data, [{"State", State}]},

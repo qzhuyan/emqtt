@@ -6,7 +6,7 @@
    {<<"1\\.4\\.[0-3]+">>, []} %% No appup maintained for these versions
   ],
   [ {<<"1\\.4\\.6">>, [
-     {load_module, emqtt, brutal_purge, soft_purge, []}
+    {update, emqtt, {advanced, []}}
     ]},
    {<<"1\\.4\\.[0-3]+">>, []} %% No appup maintained for these versions
   ]
