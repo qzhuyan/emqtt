@@ -1,13 +1,13 @@
 %% -*-: erlang -*-
 {VSN,
-  [ {<<"1\\.4\\.6">>, [
+  [ {<<"1\\.4\\.[5,6]">>, [
      {update, emqtt, {advanced, []}}
     ]},
-   {<<"1\\.4\\.[0-3]+">>, []} %% No appup maintained for these versions
+   {<<"1\\.4\\.[0-3]">>, []} %% No appup maintained for these versions
   ],
-  [ {<<"1\\.4\\.6">>, [
+  [ {<<"1\\.4\\.[5,6]">>, [
     {update, emqtt, {advanced, []}}
     ]},
-   {<<"1\\.4\\.[0-3]+">>, []} %% No appup maintained for these versions
+   {<<"1\\.4\\.[0-3]">>, []} %% No appup maintained for these versions
   ]
 }.
