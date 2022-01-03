@@ -757,7 +757,7 @@ waiting_for_connack(cast, ?CONNACK_PACKET(ReasonCode,
         false -> {stop, connack_error}
     end;
 
-waiting_for_connack({call, From}, Event, _State) when Event =/= stop ->
+waiting_for_connack({call, _From}, Event, _State) when Event =/= stop ->
     {keep_state_and_data, postpone};
 
 waiting_for_connack(timeout, _Timeout, State) ->

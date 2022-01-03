@@ -114,15 +114,9 @@ test_relup() {
         $appscript upgrade --no-permanent "$target_vsn"
         $appscript ping
         $appscript versions
-        #$appscript eval 'false = erlang:check_process_code(whereis(test_client1),emqtt).'
-        #$appscript eval 'ok = gen_statem:stop(test_client1).'
         erl_eval "$appscript" 'false = erlang:check_process_code(whereis(test_client1),emqtt).' 'false'
-        # erl_eval "$appscript" 'sys:suspend(test_client1).' 'ok'
-        # erl_eval "$appscript" 'sys:change_code(test_client1,emqtt,"1.2.6",[]).' 'ok'
-        # erl_eval "$appscript" 'sys:resume(test_client1).' 'ok'
         erl_eval "$appscript" 'ok = gen_statem:stop(test_client1).' 'ok'
         echo "Upgrade test done and success"
-
 
         $appscript eval 'spawn_link(fun() -> process_flag(trap_exit, false), {ok, Pid}=emqtt:start_link(), ets:insert(ac_tab,{{application_master, emqtt},Pid}), true=register(test_client1, Pid), receive stop -> ok end end).'
         erl_eval "$appscript" 'true = is_process_alive(whereis(test_client1)).' 'true'
@@ -145,7 +139,6 @@ make_relup() {
     local appdir="$1/$app"
 
     untar_all_pkgs "$tmpdir"
-    #cp _build/emqtt_relup_test/lib/emqtt/ebin/emqtt.appup "${appdir}/lib/emqtt-${current_vsn}/ebin/"
     pushd ./
 
     cd "${appdir}"
