@@ -981,14 +981,13 @@ connected(info, {timeout, _TRef, keepalive}, State = #state{force_ping = true, l
     end;
 
 connected(info, {timeout, TRef, keepalive},
-          State = #state{conn_mod = ConnMod, socket = Sock,
+          State = #state{%conn_mod = ConnMod, socket = Sock,
+                         last_packet_id = LastPacketId,
                          paused = Paused, keepalive_timer = TRef}) ->
-    case (not Paused) andalso should_ping(ConnMod, Sock) of
+    case (not Paused) andalso should_ping(LastPacketId) of
         true ->
             case send(?PACKET(?PINGREQ), State) of
                 {ok, NewState} ->
-                    {ok, [{send_oct, Val}]} = ConnMod:getstat(Sock, [send_oct]),
-                    put(send_oct, Val),
                     {keep_state, ensure_keepalive_timer(NewState), [hibernate]};
                 Error -> {stop, Error}
             end;
@@ -1198,22 +1197,9 @@ format_status(_, State) ->
 %%--------------------------------------------------------------------
 %% Internal functions
 %%--------------------------------------------------------------------
-should_ping(emqtt_quic, Sock) ->
-    case emqtt_quic:getstat(Sock, [send_cnt]) of
-        {ok, [{send_cnt, V}]} ->
-            V == put(quic_send_cnt, V) orelse V == undefined;
-        Err ->
-            Err
-    end;
-
-should_ping(ConnMod, Sock) ->
-    case ConnMod:getstat(Sock, [send_oct]) of
-        {ok, [{send_oct, Val}]} ->
-            OldVal = put(send_oct, Val),
-            OldVal == undefined orelse OldVal == Val;
-        Error = {error, _Reason} ->
-            Error
-    end.
+should_ping(Val) ->
+    OldVal = put(last_ping_msg_id, Val),
+    OldVal == undefined orelse OldVal == Val.
 
 is_inflight_full(#state{max_inflight = infinity}) ->
     false;
@@ -1285,7 +1271,7 @@ ensure_keepalive_timer(State = #state{keepalive = 0}) ->
 ensure_keepalive_timer(State = #state{keepalive = I}) ->
     ensure_keepalive_timer(timer:seconds(I), State).
 ensure_keepalive_timer(I, State) when is_integer(I) ->
-    State#state{keepalive_timer = erlang:start_timer(I, self(), keepalive)}.
+    State#state{keepalive_timer = erlang:start_timer(floor(I*0.5), self(), keepalive)}.
 
 new_call(Id, From) ->
     new_call(Id, From, undefined).
@@ -1462,7 +1448,10 @@ send(Packet, State = #state{conn_mod = ConnMod, socket = Sock, proto_ver = Ver})
     Data = emqtt_frame:serialize(Packet, Ver),
     ?LOG(debug, "SEND_Data", #{packet => Packet}, State),
     case ConnMod:send(Sock, Data) of
-        ok  -> {ok, bump_last_packet_id(State)};
+        ok  ->
+            NewState = bump_last_packet_id(State),
+            Packet == ?PACKET(?PINGREQ) andalso put(last_ping_msg_id, NewState#state.last_packet_id),
+            {ok, NewState};
         Error -> Error
     end.
 
