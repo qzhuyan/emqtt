@@ -7,10 +7,11 @@ build_pkg(){
     if [ $(uname) = Linux ]; then
         make pkg
     elif [ $(uname) = Darwin ]; then
-        pkg=emqtt-macos-$(git describe --tags --always).zip
+        if [ -z "$pkg" ]; then
+            echo "err: pkg name for Darwin unset"
+        fi
         make emqtt
         mkdir -p $PACKAGE_PATH
-
         cd _build/emqtt/rel && zip -rq $pkg emqtt && cd -
         mv _build/emqtt/rel/$pkg $PACKAGE_PATH
     fi
