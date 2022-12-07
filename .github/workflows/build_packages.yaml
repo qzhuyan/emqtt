@@ -76,7 +76,7 @@ jobs:
             openssl dgst -sha256 _packages/$pkg | awk '{print $2}' > _packages/$pkg.sha256
         - uses: actions/upload-artifact@v1
           with:
-            name: packages-mac-otp
+            name: packages-mac-otp-${{ matrix.otp }}
             path: _packages/.
 
     release:
@@ -125,7 +125,11 @@ jobs:
             path: _packages
         - uses: actions/download-artifact@v1
           with:
-            name: packages-mac
+            name: packages-mac-otp-23
+            path: _packages
+        - uses: actions/download-artifact@v1
+          with:
+            name: packages-mac-otp-24
             path: _packages
         - name: set aws
           run: |
