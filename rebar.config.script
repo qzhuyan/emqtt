@@ -23,9 +23,8 @@ IsMacOS = fun() ->
           end,
 
 IsQuicSupp = fun() ->
-                not (IsCentos6() orelse IsWin32() orelse IsMacOS()
-                     orelse false =/= os:getenv("BUILD_WITHOUT_QUIC")
-                    )
+                not (IsCentos6() orelse IsWin32() orelse IsMacOS())
+                  orelse false == os:getenv("BUILD_WITHOUT_QUIC")
              end,
 
 NewRelx =
